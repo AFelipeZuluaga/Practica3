@@ -1,0 +1,214 @@
+#include <iostream>
+
+using namespace std;
+
+#include <iostream>
+#include <fstream>
+#include <sstream>
+#include <stdio.h>
+#include <string>
+
+int codificacion(char *name, char *nombre_salida, int method, int n);
+char *text2bin(char *texto);
+unsigned long long int longitud(char *a);
+char *particion_y_metodo1(char *binario, int n);
+char *particion_y_metodo2(char *binario, int n);
+char cambio(char *partido, unsigned long long int j);
+char *concatenacion(char *codif, char *agregar, unsigned long long int k, int n);
+
+
+int main(){
+    int dim=0;
+    int metodo,n;
+    char *nombre_entrada=new char[dim+1];
+    char *nombre_salida=new char[dim+1];
+    cout << "Ingrese el metodo de codificacion deseado: ";
+    cin >> metodo;
+    cout << "Ingrese la semilla n: ";
+    cin >> n;
+    cout<<"Ingrese el nombre del archivo de entrada: ";
+    cin>> nombre_entrada;
+    cout<<"Ingrese el nombre del archivo de salida: ";
+    cin>> nombre_salida;
+    codificacion(nombre_entrada, nombre_salida, metodo,n);
+    delete[] nombre_salida;
+    delete[] nombre_entrada;
+    return 0;
+}
+
+int codificacion(char *name, char *nombre_salida, int method, int n)
+{
+    int dim=0;
+    unsigned long long int longi_texto;
+    char texto[30];
+
+    char *binario=new char[dim+1];
+    char *codificacion=new char[dim+1];
+
+    ifstream fin;               //stream de entrada, lectura
+    ofstream fout;              //stream de salida, escritura
+    fin.open(name);
+    fin.getline(texto,30);
+    fin.seekg(0);                   //vuelve al principio del archivo
+
+    longi_texto=longitud(texto);
+    binario=text2bin(texto);
+
+    cout<<"Texto: "<<texto<<endl;
+    cout<<"binario: ";
+    for(unsigned long long int j=0; j<longi_texto*8; j++){
+        cout<<binario[j];
+    }
+
+
+    if (method==1){
+        codificacion= particion_y_metodo1(binario,n);
+    }
+    else if (method==2){
+        codificacion= particion_y_metodo2(binario, n);
+    }
+
+
+    delete[] binario;
+
+    fout.open(nombre_salida);
+
+    cout<<endl<<"codificado: ";
+    for(unsigned long long int j=0; j<longi_texto*8; j++){
+        cout<<codificacion[j];
+    }
+
+    fout.close();
+
+    cout <<endl;
+    delete[] codificacion;
+}
+
+char *text2bin(char *texto)
+{
+    unsigned long long int longi=0;
+    longi=longitud(texto);
+    char *binario=new char[longi*8+1];
+    for(int k=0; k<longi*8; k++){
+        binario[k]='A';
+    }    for(unsigned long long int i=0; i<longi; i++){
+        for(int j=0; j<8; j++){
+            binario[i*8+j]=char((((texto[i]<<j)&(0x80))/128)+48);
+        }
+
+    }
+    return binario;
+}
+
+
+unsigned long long int longitud(char *a){
+    unsigned long long int i=0;
+    for(i=0; a[i]!='\0'; i++){
+    }
+return i;
+}
+
+
+char *particion_y_metodo1(char *binario, int n)
+{
+    int ceros=0;
+    int unos=0;
+    int m=0;
+    unsigned long long int longi=0;
+    longi=longitud(binario);
+    char *codif=new char[longi+1];
+    for(unsigned long long int i=0, k=0; i<longi;i++){
+
+    if(k!=0){
+     if (binario[m+(k-1)*n]=='1'){
+                unos++;
+            }
+            else {
+                ceros++;
+            }
+        }
+            m++;
+
+        if((k+1)*n-1==i || i==longi-1){      //Verificación para cuando se llena el arreglo partido
+
+            if(k==0){       //Si es el primer bloque
+                    for(unsigned long long int j=0; j<n; j++){
+                        codif[k*n+j]=cambio(binario,j+k*n);
+                     }
+            }
+
+            else{
+                if(unos==ceros){
+                    for(unsigned long long int j=0; j<n; j++){
+                        codif[j+k*n]=cambio(binario,j+k*n);
+                  }
+                }
+
+                else if(unos<ceros){    //caso 2
+                    for(unsigned long long int j=0; j<n; j++){
+                        if((j+1)%2==0){
+                            codif[j+k*n]=cambio(binario,j+k*n);
+                        }
+                        else{
+                            codif[j+k*n]=binario[j+k*n];
+                        }
+                    }
+                }
+                else{           //caso 3
+                    for(unsigned long long int j=0; j<n; j++){
+                        if((j+1)%3==0){
+                        codif[j+k*n]=cambio(binario, j+k*n);
+                        }
+                        else{
+                        codif[j+k*n]=binario[j+k*n];
+                        }
+                    }
+                }
+            }
+
+            k++;
+            ceros=0;
+            unos=0;
+            m=0;
+        }
+    }
+
+    return codif;
+}
+
+char *particion_y_metodo2(char *binario, int n)
+{
+    unsigned long long int longi;
+    longi=longitud(binario);
+    char *codif = new char[longi+1]; //Almacena el binario codificado
+
+    for(unsigned long long int i=0, k=0; i<longi-1;i++){       //k es el número de bloques que ya se han evaluado
+
+        if((k+1)*n-1==i){       //Verificación para cuando se llena el arreglo partido
+
+            for(int j=0; j<n ; j++){
+                if(j==(n-1)){
+                                codif[0+k*n]=binario[j+k*n];
+                            }
+
+                        else{
+                            codif[j+1+k*n]=binario[j+k*n];
+                        }
+            }
+            k++;
+        }
+    }
+    return codif;
+}
+
+char cambio(char *partido, unsigned long long int j){
+    char agregar;
+    if(partido[j]=='1'){
+        agregar='0';
+    }
+    else {
+        agregar='1';
+    }
+
+    return agregar;
+}
