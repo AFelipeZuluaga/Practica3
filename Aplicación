@@ -1,0 +1,325 @@
+#include <iostream>
+#include <math.h>
+#include <cmath>
+
+using namespace std;
+
+#include <iostream>
+#include <fstream>
+#include <sstream>
+#include <string>
+#include <cstdlib>
+
+string codificacion(string binario);
+string text2bin(string texto);
+char cambio(string partido, unsigned long long int j);
+string leer_txt(string name);
+void registro(unsigned long int cedula, string clave, unsigned long long int saldo);
+void ingreso(unsigned long int cedula, string clave);
+void consultarsaldo(string name);
+void retiro(string name, unsigned long long int retirar);
+unsigned long long int posicion_inicial_saldo(string name);
+void escribir_txt(string name, string data);
+
+int main()
+{
+    while(1){
+    string validacion;      //Texto que se ingresa por la consola
+    string binario;         //validacion en binario
+    string codificado;      //validacion codificado
+    string sudo;            //Texto para comparacion de validacion
+    char REoIN='A';               //Variable para saber si el usuario quiere registrarse o ingresar al sistema
+    unsigned long int cedula=0;
+    string clave;
+    unsigned long long int saldo=0;
+
+    //Validación de la clave
+    cout << endl <<"Ingresa la clave de validacion: ";
+    cin >> validacion;
+    binario= text2bin(validacion);
+    codificado=codificacion(binario);
+
+    sudo=leer_txt("sudo.txt");
+
+    if(codificado==sudo){
+        cout<<"BIENVENIDO!!!!"<<endl;
+
+        while(REoIN!='R' & REoIN!='S'){
+        cout<<"Si quieres registrarte pon R, si quieres ingresar al sistema pon S: ";
+        cin>> REoIN;
+        }
+
+        if(REoIN=='R'){
+            cout<<"Has elegido la opcion de registro."<<endl;
+            cout<<"Ingresa tu cedula: ";
+            cin>>cedula;
+            cout<<"Ingresa tu clave: ";
+            cin>>clave;
+            cout<<"Ingresa tu saldo: ";
+            cin>>saldo;
+
+            registro(cedula, clave, saldo);
+        }
+        else{           //if(REoIN='S')
+            cout<<"Has elegido la opcion de ingreso al sistema."<<endl;
+            ingreso(cedula, clave);
+        }
+
+    }else   cout<<"Contrasena Incorrecta"<<endl;
+
+
+    }           //corchete del while infinito
+    return 0;
+}
+
+string codificacion(string binario)
+{
+    int ceros=0;
+    int unos=0;
+    string codif;
+    for(unsigned long long int i=0, k=0; i<binario.length();i++){
+
+        if((k+1)*4-1==i || i==binario.length()-1){
+            if(k==0){
+                    for(unsigned long long int j=0; j<4; j++){
+                        codif.push_back(cambio(binario,j+k*4));
+                    }
+            }
+
+            else{
+                if(unos==ceros){
+                       for(unsigned long long int j=0; j<4; j++){
+                            codif.push_back(cambio(binario,j+k*4));
+                    }
+                }
+
+                else if(unos<ceros){
+                    for(unsigned long long int j=0; j<4; j++){
+                        if((j+1)%2==0){
+                            codif.push_back(cambio(binario,j+k*4));
+                         }
+                         else{
+                         codif.push_back(binario[j+k*4]);
+                         }
+                    }
+                }
+                else{
+                    for(unsigned long long int j=0; j<4; j++){
+                    if((j+1)%3==0){
+                        codif.push_back(cambio(binario,j+k*4));
+                }
+                else{
+                    codif.push_back(binario[j+k*4]);
+                }
+            }
+        }
+    }
+
+    ceros=0;
+    unos=0;
+
+    for(unsigned long long int m=0;m<4;m++){
+        if (binario[m+k*4]=='1'){
+            unos++;
+        }
+        else {
+            ceros++;
+        }
+        }
+    k++;
+    }
+    }
+    return codif;
+}
+
+char cambio(string partido, unsigned long long int j){
+    char agregar;
+    if(partido[j]=='1'){
+        agregar='0';
+    }
+    else {
+        agregar='1';
+    }
+    return agregar;
+}
+
+string text2bin(string texto)
+{
+    string binario;
+    for(unsigned long long int i=0; i<texto.length(); i++){
+        for(int j=0; j<8;j++) binario.push_back(char((((texto[i]<<j)&(0x80))/128)+48));
+    }
+    return binario;
+}
+
+
+string leer_txt(string name)
+{
+    long long int tam;
+    string data;
+    fstream k(name, fstream::in | fstream::ate | fstream::binary);
+    if(k.is_open()){
+        tam=k.tellg();
+        k.seekg(0);
+        for(long long int i=0; i<tam; i++) data.push_back(k.get());
+    }
+    else cout << "El archivo de texto no existe" << endl;
+    k.close();
+    return data;
+}
+
+void registro(unsigned long int cedula, string clave, unsigned long long int saldo){
+    string texto;
+    string cedula_str;
+    string saldo_str;
+    string name;
+    unsigned long int divisor=1000000000;
+    char agregar;
+
+    cout<<"cedula: "<<cedula<<endl;
+
+    stringstream ss;
+    ss<<cedula;
+    ss>>cedula_str;
+
+    cout<<"cedula str: "<<cedula_str<<endl;
+
+    stringstream zz;
+    zz<<saldo;
+    zz>>saldo_str;
+
+    cout<<"saldo: "<<saldo<<endl;
+    cout<<"saldo str: "<<saldo_str<<endl;
+
+
+    texto=cedula_str+'\n'+clave+'\n'+saldo_str;
+    name=cedula_str+".txt";
+
+    cout<<"texto: "<<texto<<endl;
+    escribir_txt(name, texto);
+}
+
+void ingreso(unsigned long int cedula, string clave){
+
+    string texto;
+    string cedula_str;
+    string name;
+    char CONoRET='A';
+    bool k=1;
+    unsigned long long int retirar;
+
+    while(k==1){
+    k=0;           //k es 0 siempre que los datos sean iguales.
+
+    cout<<"Ingresa tu cedula: ";
+    cin>>cedula;
+    cout<<"Ingresa tu clave: ";
+    cin>>clave;
+
+    stringstream ss;
+    ss<<cedula;
+    ss>>cedula_str;
+
+    cout<<"cedula: "<<cedula<<endl;
+
+    name=cedula_str+".txt";
+    texto=leer_txt(name);
+
+
+    for(int i=0; i<10; i++){
+        if(cedula_str[i]!=texto[i]){
+            k=1;
+        }
+    }
+
+    for(int i=0; i<clave.length();i++){
+        if(clave[i]!=texto[11+i]){
+            k=1;
+        }
+    }
+
+    if(k==0){
+        cout<<"Correcta validacion"<<endl;
+        while(CONoRET!='S' && CONoRET!='R'){
+        cout<<"Ingresa S para consultar tu saldo o R para retirar: ";
+        cin>>CONoRET;
+        }
+
+        if(CONoRET=='S'){
+            cout<<"Elegiste la opcion de consultar tu saldo.";
+            retiro(name,0);
+        }
+        else{   //if(CONoRET=='R')
+            cout<<"Elegiste la opcion de retirar dinero."<<endl<<"Dame la cantidad de dinero a retirar: ";
+            cin>>retirar;
+            retiro(name, retirar);
+        }
+    }
+
+    else{
+        cout<<"Validacion incorrecta"<<endl;
+    }
+    }
+}
+
+void retiro(string name, unsigned long long int retirar){
+    string saldo_str;
+    string texto;
+    string nuevo_texto;
+    unsigned long long int saldo=0;
+    unsigned long long int posicion_inicial=0;
+
+    texto=leer_txt(name);
+    posicion_inicial=posicion_inicial_saldo(name);
+
+    for(unsigned long long int i=posicion_inicial; i<texto.length(); i++){
+        saldo_str.push_back(texto[i]);
+    }
+
+    saldo=atoi(saldo_str.c_str());
+
+    saldo=saldo-retirar-1000;
+
+    cout<<"El costo de esta operacion fue de 1000 COP, por lo cual tu saldo actual es de: "<<saldo<<endl;
+
+    stringstream zz;
+    zz<<saldo;
+    zz>>saldo_str;
+
+
+    for(unsigned long long int i=0; i<posicion_inicial; i++){
+        nuevo_texto.push_back(texto[i]);
+    }
+
+    nuevo_texto=nuevo_texto+saldo_str;
+
+    escribir_txt(name, nuevo_texto);
+
+}
+
+unsigned long long int posicion_inicial_saldo(string name){
+    string texto;
+    unsigned long long int posicion_inicial=0;
+
+    texto=leer_txt(name);
+
+    for(unsigned long long int i=0; texto[i]!='\n';i++){
+        posicion_inicial++;
+    }
+    posicion_inicial++; //Se suma uno en posición para sumar el salto de línea
+
+    for(unsigned long long int i=posicion_inicial; texto[i]!='\n';i++){
+        posicion_inicial++;
+    }
+    posicion_inicial++; //Se suma uno en posición para sumar el salto de línea
+
+    return posicion_inicial;
+}
+
+void escribir_txt(string name, string data)
+{
+    fstream k(name, fstream::out | fstream::binary);
+    k.write(data.c_str(), data.length());
+    k.close();
+}
+
