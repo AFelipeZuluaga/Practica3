@@ -1,0 +1,249 @@
+#include <iostream>
+#include <math.h>
+#include <cmath>
+
+using namespace std;
+
+#include <iostream>
+#include <fstream>
+#include <sstream>
+#include <string>
+
+char *particion_y_metodo1_dec(char *codificado, int n);
+char *particion_y_metodo2_dec(char *codificado, int n);
+char cambio(char *partido, unsigned long long int j);
+unsigned long long int longitud(char *a);
+int bin2deci(char *partido);
+void decodificacion(int metodo, int n, char *nombre_entrada, char *nombre_salida);
+char *bin2text(char *decodificado);
+
+int main()
+{
+    int metodo=0,n=0;
+    int dim=0;
+    char *nombre_entrada=new char[dim+1];
+    char *nombre_salida=new char[dim+1];
+
+    cout << endl <<"Ingrese el metodo de decodificacion deseado, la semilla n y los nombres de los archivos de entrada y de salida: ";
+    cin >> metodo >> n >> nombre_entrada >> nombre_salida;
+    decodificacion(metodo, n, nombre_entrada, nombre_salida);
+    return 0;
+}
+
+void decodificacion(int metodo, int n, char *name, char *nombre_salida){
+    int dim=0;
+    unsigned long long int longi_texto;
+    char *codificado=new char[dim+1];
+    char *decodificado=new char[dim+1];
+    char *texto=new char[dim+1];
+    char *binario=new char[dim+1];
+
+
+    ifstream fin;               //stream de entrada, lectura
+    ofstream fout;              //stream de salida, escritura
+    fin.open(name);
+    fin.getline(codificado,40);
+    fin.seekg(0);               //vuelve al principio del archivo
+    longi_texto=longitud(texto);
+
+
+    if (metodo==1){
+        decodificado= particion_y_metodo1_dec(codificado,n);
+    }
+    else if (metodo==2){
+          decodificado= particion_y_metodo2_dec(codificado,n);
+    }
+
+    fout.open(nombre_salida);
+    fout<<decodificado;
+    fout.close();
+    //cout<<endl<<"codificado: ";
+    for(unsigned long long int j=0; j<longi_texto*8; j++){
+        //cout<<codificado[j];
+    }
+    cout<<"Codificado: "<<codificado<<endl;
+
+    texto=bin2text(decodificado);
+
+    cout<<"Texto: ";
+    for(unsigned long long int j=0; j<longi_texto+1; j++){
+        cout<<texto[j];
+    }
+    cout<<endl;
+
+    //cout<<endl<<texto<<endl;
+
+    delete[] decodificado;
+    delete[] texto;
+    delete[] binario;
+
+}
+
+char *text2bin(char *texto)
+{
+    unsigned long long int longi=0;
+    longi=longitud(texto);
+    char *binario=new char[longi*8+1];
+    for(int k=0; k<longi*8; k++){
+        binario[k]='A';
+    }    for(unsigned long long int i=0; i<longi; i++){
+        for(int j=0; j<8; j++){
+            binario[i*8+j]=char((((texto[i]<<j)&(0x80))/128)+48);
+        }
+
+    }
+    return binario;
+}
+
+
+unsigned long long int longitud(char *a){
+    unsigned long long int i=0;
+    for(i=0; a[i]!='\0'; i++){
+    }
+return i;
+}
+
+char *particion_y_metodo1_dec(char *codificado, int n)
+{
+     int ceros=0;
+     int unos=0;
+     int m=0;
+     unsigned long long int longi=0;
+     longi=longitud(codificado);
+     char *decodif=new char[longi+1];
+     for(unsigned long long int i=0, k=0; i<longi;i++){
+
+     if(k!=0){
+      if (decodif[m+(k-1)*n]=='1'){
+                 unos++;
+             }
+             else {
+                 ceros++;
+             }
+         }
+             m++;
+
+         if((k+1)*n-1==i || i==longi-1){      //Verificación para cuando se llena el arreglo partido
+
+             if(k==0){       //Si es el primer bloque
+                     for(unsigned long long int j=0; j<n; j++){
+                         decodif[k*n+j]=cambio(codificado,j+k*n);
+                      }
+             }
+
+             else{
+                 if(unos==ceros){
+                     for(unsigned long long int j=0; j<n; j++){
+                         decodif[j+k*n]=cambio(codificado,j+k*n);
+                   }
+                 }
+
+                 else if(unos<ceros){    //caso 2
+                     for(unsigned long long int j=0; j<n; j++){
+                         if((j+1)%2==0){
+                             decodif[j+k*n]=cambio(codificado,j+k*n);
+                         }
+                         else{
+                             decodif[j+k*n]=codificado[j+k*n];
+                         }
+                     }
+                 }
+                 else{           //caso 3
+                     for(unsigned long long int j=0; j<n; j++){
+                         if((j+1)%3==0){
+                         decodif[j+k*n]=cambio(codificado, j+k*n);
+                         }
+                         else{
+                         decodif[j+k*n]=codificado[j+k*n];
+                         }
+                     }
+                 }
+             }
+
+             k++;
+             ceros=0;
+             unos=0;
+             m=0;
+         }
+     }
+
+     return decodif;
+
+ }
+
+
+
+char *particion_y_metodo2_dec(char *binario,int n)
+{
+    unsigned long long int longi;
+    longi=longitud(binario);
+    char *decodif = new char[longi+1];
+
+    for(unsigned long long int i=0, k=0; i<longi;i++){
+
+        if((k+1)*n-1==i){
+
+            for(int j=0; j<n ; j++){
+                if(j==0){
+                    decodif[n-1+k*n]=binario[0+k*n];
+                }
+
+                else{
+                    decodif[j-1+k*n]=binario[j+k*n];
+                }
+            }
+
+            k++;
+        }
+       }
+    return decodif;
+}
+
+
+char cambio(char *partido, unsigned long long int j){
+    char agregar;
+    if(partido[j]=='1'){
+        agregar='0';
+    }
+    else {
+        agregar='1';
+    }
+
+    return agregar;
+}
+
+char *bin2text(char *decodificado)
+{
+    char letra;
+    int dim=0;
+    int decimal=0;
+    int m=0;
+    char *partido=new char[8];
+    char *texto=new char[dim+1];
+    int longi=0;
+    longi=longitud(decodificado);
+    cout<<"decodificado: "<<decodificado<<endl;
+    for(unsigned long long int i=0, k=0; i<longi; i++){
+
+        partido[m]=decodificado[i];
+        m++;
+        if((k+1)*8-1==i){       //Condición para el final del byte
+
+
+        int decimal=0;
+        int multiplicador=1;
+        for (int j=7; j>0; j--) {
+            if(partido[j]=='1'){
+                decimal=decimal+multiplicador;
+            }
+            multiplicador=multiplicador*2;
+        }
+
+        letra=decimal;
+        texto[k]=letra;
+        k++;
+        m=0;
+        }
+    }
+    return texto;
+}
