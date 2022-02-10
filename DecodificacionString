@@ -1,0 +1,261 @@
+#include <iostream>
+#include <math.h>
+
+using namespace std;
+
+#include <iostream>
+#include <fstream>
+#include <sstream>
+#include <string>
+
+
+string particion_y_metodo1_dec(string codificado, int n);
+string particion_y_metodo2_dec(string codificado, int n);
+string leer_txt(string name);
+string text2bin_dec(string texto);
+void decodificacion(int metodo, int n, string nombre_entrada, string nombre_salida);
+string bin2text(string decodificado);
+void escribir_txt(string name, string data);
+int bin2deci(string partido);
+char cambio_dec(string partido, unsigned long long int j);
+void escribir_txt(string name, string data);
+
+int main()
+{
+    int metodo,n;
+    string nombre_entrada, nombre_salida;
+
+    cout << endl <<"Ingrese el metodo de decodificacion deseado, la semilla n y los nombres de los archivos de entrada y de salida: ";
+    cin >> metodo >> n >> nombre_entrada >> nombre_salida;
+    decodificacion(metodo, n, nombre_entrada, nombre_salida);
+    nombre_entrada.clear();
+    nombre_salida.clear();
+    return 0;
+}
+
+void decodificacion(int metodo, int n, string nombre_entrada, string nombre_salida){
+
+    string codificado, decodificado, texto, simbolos;
+
+    codificado=leer_txt(nombre_entrada);
+    //simbolos=leer_txt(nombre_entrada);
+ //   codificado= text2bin_dec(simbolos);
+
+    cout<<endl;
+
+    if (metodo==1){
+        decodificado= particion_y_metodo1_dec(codificado,n);
+    }
+    else if (metodo==2){
+        decodificado= particion_y_metodo2_dec(codificado,n);
+    }
+
+cout<<decodificado<<endl;
+
+texto=bin2text(decodificado);
+
+cout<<texto<<endl;
+
+escribir_txt(nombre_salida, texto);
+
+codificado.clear();
+decodificado.clear();
+texto.clear();
+simbolos.clear();
+}
+
+string particion_y_metodo1_dec(string codificado, int n)
+{
+    int ceros=0;
+    int unos=0;
+    unsigned long long int longitud;
+    string partido;
+    string decodif;
+    char agregar;
+    for(unsigned long long int i=0, k=0; i<codificado.length();i++){
+
+        partido.push_back(codificado[i]);
+
+        ceros=0;
+        unos=0;
+
+        for(unsigned long long int m=0;m<n;m++){
+            if (decodif[m+(k-1)*n]=='1'){
+                unos++;
+            }
+            else {
+                ceros++;
+            }
+        }
+
+        if((k+1)*n-1==i){
+
+            if(k==0){
+                    for(unsigned long long int j=0; j<partido.length(); j++){
+                        agregar=cambio_dec(partido, j);
+                        decodif.push_back(agregar);
+                    }
+                    }
+
+            else{
+                if(unos==ceros){
+                    //cout<<"caso 1 ";
+
+                    for(unsigned long long int j=0; j<partido.length(); j++){
+                        agregar=cambio_dec(partido, j);
+                        decodif.push_back(agregar);
+                    }
+                    //cout<<codif<<endl;
+                }
+
+                else if(unos<ceros){
+                    //cout<<"caso 2";
+                                        for(unsigned long long int j=0; j<partido.length(); j++){
+                                            if((j+1)%2==0){
+                                            agregar=cambio_dec(partido, j);
+                                            decodif.push_back(agregar);
+                                            }
+                                            else{
+                                                decodif.push_back(partido[j]);
+                                            }
+                                        }
+                                        //cout<<codif<<endl;
+                                        }
+                else{
+                    //cout<<"caso 3";
+                    for(unsigned long long int j=0; j<partido.length(); j++){
+                        if((j+1)%3==0){
+                        agregar=cambio_dec(partido, j);
+                        decodif.push_back(agregar);
+                        }
+                        else{
+                            decodif.push_back(partido[j]);
+                        }
+                    }
+                }
+            }
+            partido.clear();
+            k++;
+        }
+
+    }
+
+    return decodif;
+}
+
+
+
+string particion_y_metodo2_dec(string binario,int n)
+{
+    unsigned long long int longitud;
+    longitud=binario.length();
+    string codif;
+
+    for(unsigned long long int i=0, k=0; i<binario.length();i++){
+
+        codif.push_back('A');
+
+        if((k+1)*n-1==i){
+
+            for(int j=0; j<n ; j++){
+                if(j==0){
+                    codif[n-1+k*n]=binario[0+k*n];
+                }
+
+                else{
+                    codif[j-1+k*n]=binario[j+k*n];
+                }
+            }
+            k++;
+        }
+       }
+
+    return codif;
+}
+
+
+string leer_txt(string name)
+{
+    long long int tam;
+    string data;
+    fstream k(name, fstream::in | fstream::ate | fstream::binary);  //
+    if(k.is_open()){
+        tam=k.tellg();
+        k.seekg(0);
+        for(long long int i=0; i<tam; i++) data.push_back(k.get());
+    }
+    else cout << "El archivo de texto no existe" << endl;
+    k.close();
+    return data;
+}
+
+string text2bin_dec(string texto)
+{
+    string binario;
+    for(unsigned long long int i=0; i<texto.length(); i++){
+        for(int j=0; j<8;j++) binario.push_back(char((((texto[i]<<j)&(0x80))/128)+48));
+    }
+    return binario;
+}
+
+
+
+char cambio_dec(string partido, unsigned long long int j){
+    char agregar;
+    if(partido[j]=='1'){
+        agregar='0';
+    }
+    else {
+        agregar='1';
+    }
+
+    return agregar;
+}
+
+
+string bin2text(string decodificado)
+{
+    char letra;
+    int decimal=0;
+    string partido;
+    string texto;
+    char agregar;
+
+    for(unsigned long long int i=0, k=0; i<decodificado.length();i++){
+
+        partido.push_back(decodificado[i]);
+
+
+        if((k+1)*8-1==i){
+
+
+            decimal = bin2deci(partido);
+
+            letra=decimal;
+
+            texto.push_back(letra);
+
+            partido.clear();
+            k++;
+        }
+    }
+    return texto;
+}
+
+
+int bin2deci(string partido){
+    int decimal=0;
+    for (int i=0; i<8; i++) {
+        if(partido[7-i]=='1'){
+            decimal=decimal+pow(2,i);
+        }
+    }
+    return decimal;
+}
+
+void escribir_txt(string name, string data)
+{
+    fstream k(name, fstream::out | fstream::binary);
+    k.write(data.c_str(), data.length());
+    k.close();
+}
